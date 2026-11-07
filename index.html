@@ -94,6 +94,7 @@
   .links a { display: block; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; text-decoration: none; font-size: .88rem; background: var(--chpf-gris-50); }
   .links a:hover { border-color: var(--accent); }
   .foot { text-align: center; padding: 0 14px 28px; margin-top: -40px; }
+  .version { margin: 6px 0 0; font-size: .75rem; color: var(--muted); }
   .linkbtn { background: none; border: 0; padding: 4px; color: var(--muted); font-size: .8rem; font-weight: 400; text-decoration: underline; cursor: pointer; }
   dialog { border: 0; border-radius: 16px; padding: 20px; width: min(420px, calc(100vw - 32px)); box-shadow: 0 20px 60px rgba(0,0,0,.25); color: var(--ink); }
   dialog::backdrop { background: rgba(34, 34, 34, .5); }
@@ -275,6 +276,7 @@
 
 <footer class="foot">
   <button type="button" class="linkbtn" id="btnIssue">Problème technique ?</button>
+  <p class="version">Version <span id="appVersion"></span></p>
 </footer>
 
 <dialog id="issueDlg" aria-labelledby="dlgTitle">
@@ -777,6 +779,11 @@ async function share() {
 // Laisser vide : il est détecté automatiquement quand la page est servie par GitHub Pages
 // (https://propriétaire.github.io/dépôt/).
 const GITHUB_REPO = '';
+
+// Version affichée en bas de page et jointe aux signalements.
+// À incrémenter à chaque mise en ligne (et à reporter dans l'historique du README).
+const APP_VERSION = '1.2';
+$('appVersion').textContent = APP_VERSION;
 let lastError = '';
 window.addEventListener('error', e => { lastError = String(e.message || e.error || ''); });
 
@@ -791,6 +798,7 @@ function githubRepo() {
 function issueUrl() {
   const repo = githubRepo(); if (!repo) return '';
   const diag = [
+    `- Version : ${APP_VERSION}`,
     `- Page : ${location.href.split('?')[0]}`,
     `- Date : ${new Date().toLocaleString('fr-FR')}`,
     `- Navigateur : ${navigator.userAgent}`,

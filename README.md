@@ -603,6 +603,7 @@ L.push(`SUMMARY:${esc(e.title)}`, `LOCATION:${esc('CHU – Néonatologie')}`, �
 
 | Version | Date | Changements |
 |---|---|---|
+| 1.2 | 2026-11-07 | Fuseau imposé `Pacific/Tahiti` (suppression de l'option), charte graphique CHPF, fenêtre « Avertissement » à l'ouverture, numéro de version en bas de page (joint aux signalements). |
 | 1.0 | 2026-11-07 | Première version : lecture de l'export, choix des codes, options, vérification des heures et congés avec confirmation, export ICS, partage mobile, guide d'import, signalement GitHub. |
 
-> Pensez à compléter ce tableau à chaque mise en ligne.
+> Pensez à compléter ce tableau à chaque mise en ligne, et à mettre à jour la constante `APP_VERSION` dans `index.html` (affichée en bas de page et jointe aux signalements).
