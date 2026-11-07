@@ -69,6 +69,26 @@
   .chips span { background: var(--bg); border-radius: 99px; padding: 4px 10px; font-size: .85rem; }
   .confirm { margin-top: 16px; padding: 12px; border-radius: 10px; background: #fff7f1; border: 1px solid #f1c9a9; font-weight: 600; }
   .confirm input { width: 20px; height: 20px; flex: none; }
+  .help details { border-top: 1px solid var(--line); padding: 10px 0; }
+  .help details:last-child { padding-bottom: 0; }
+  .help summary { font-weight: 600; font-size: .98rem; color: var(--ink); list-style-position: inside; }
+  .help summary::marker { color: var(--accent2); }
+  .help ol, .help ul { padding-left: 22px; margin: 10px 0; font-size: .92rem; color: var(--ink); }
+  .help li { margin-bottom: 6px; }
+  .help a { color: var(--accent); }
+  .help code { background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+  .tip { background: #eef5f0; border: 1px solid #cfe3d5; border-radius: 10px; padding: 10px 12px; font-size: .9rem; margin-bottom: 8px; }
+  .warnline { font-size: .88rem; color: var(--warn); margin: 6px 0; }
+  .links { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 2px; }
+  .links a { display: block; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; text-decoration: none; font-size: .88rem; background: #fbfbfa; }
+  .links a:hover { border-color: var(--accent); }
+  .foot { text-align: center; padding: 0 14px 28px; margin-top: -40px; }
+  .linkbtn { background: none; border: 0; padding: 4px; color: var(--muted); font-size: .8rem; font-weight: 400; text-decoration: underline; cursor: pointer; }
+  dialog { border: 0; border-radius: 16px; padding: 20px; width: min(420px, calc(100vw - 32px)); box-shadow: 0 20px 60px rgba(0,0,0,.25); color: var(--ink); }
+  dialog::backdrop { background: rgba(20, 30, 40, .45); }
+  dialog h3 { margin: 0 0 8px; font-size: 1.05rem; text-transform: none; letter-spacing: 0; color: var(--ink); }
+  dialog p { margin: 0 0 10px; font-size: .95rem; }
+  .btnlink { display: inline-block; font-weight: 600; border-radius: 11px; padding: 12px 18px; background: var(--accent); color: #fff; text-decoration: none; }
   @media (max-width: 520px) { .tiles { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } th.hide-s, td.hide-s { display: none; } }
 </style>
@@ -154,18 +174,134 @@
       <button id="btnDl">Télécharger le fichier .ics</button>
       <button id="btnShare" class="alt hidden">Partager…</button>
     </div>
-    <details style="margin-top:14px">
-      <summary>Comment importer le fichier ?</summary>
+    <p class="note">Une fois le fichier téléchargé, suivez le guide d'import ci-dessous 👇</p>
+  </section>
+
+  <section class="card help" id="secHelp">
+    <h2><span class="n">?</span> Comment importer le fichier dans mon agenda</h2>
+
+    <div class="tip">
+      <b>Avant le premier import : créez un agenda dédié</b> (par exemple « Planning »). Vos postes ne se mélangent pas à vos rendez-vous personnels, vous pouvez partager uniquement cet agenda, et en cas d'erreur il suffit de le supprimer pour tout annuler.
+    </div>
+
+    <details>
+      <summary>📱 iPhone / iPad (Apple Agenda)</summary>
       <ol>
-        <li><b>iPhone / iPad :</b> touchez le fichier téléchargé (app Fichiers ou bandeau de Safari), puis « Ajouter tout » et choisissez l'agenda partagé.</li>
-        <li><b>Mac :</b> double-cliquez sur le fichier et choisissez l'agenda dans Calendrier.</li>
-        <li><b>Google Agenda :</b> sur un ordinateur, calendar.google.com → ⚙️ Paramètres → « Importer et exporter » → choisissez le fichier et l'agenda de destination. L'appli mobile Google Agenda ne sait pas importer de fichier.</li>
-        <li>Importez dans un <b>agenda dédié</b> au planning. Pour une nouvelle période, réglez « Du / Au » pour ne pas réimporter des jours déjà présents.</li>
+        <li>Touchez <b>Télécharger le fichier .ics</b>, puis ouvrez le fichier : bandeau de téléchargement de Safari, ou app <b>Fichiers → Téléchargements</b>.</li>
+        <li>L'app Calendrier propose d'ajouter les événements : touchez <b>« Ajouter tout »</b>.</li>
+        <li>Choisissez l'<b>agenda de destination</b> (votre agenda « Planning »), puis validez.</li>
+        <li>Si rien ne se passe à l'ouverture : envoyez-vous le fichier par e-mail et touchez la pièce jointe dans l'app Mail.</li>
       </ol>
+      <p class="links">
+        <a href="https://support.apple.com/fr-fr/guide/iphone/iph7613c4fb/ios" target="_blank" rel="noopener">📄 Apple : partager des calendriers iCloud sur l'iPhone</a>
+        <a href="https://www.youtube.com/watch?v=7-hJ2kZ5wtU" target="_blank" rel="noopener">▶️ Vidéo : partager un calendrier iCloud sur iPhone (en anglais)</a>
+      </p>
+    </details>
+
+    <details>
+      <summary>💻 Mac (app Calendrier)</summary>
+      <ol>
+        <li>Si besoin, créez d'abord l'agenda dédié : <b>Fichier → Nouveau calendrier</b> (choisissez un compte iCloud pour pouvoir le partager).</li>
+        <li><b>Fichier → Importer…</b>, sélectionnez le fichier .ics, puis cliquez sur <b>Importer</b>.</li>
+        <li>Choisissez le calendrier de destination et validez.</li>
+        <li>Astuce : vous pouvez aussi simplement <b>glisser le fichier</b> sur la fenêtre Calendrier.</li>
+      </ol>
+      <p class="links">
+        <a href="https://support.apple.com/fr-fr/guide/calendar/icl1023/mac" target="_blank" rel="noopener">📄 Apple : importer ou exporter des calendriers sur Mac</a>
+      </p>
+    </details>
+
+    <details>
+      <summary>🟦 Google Agenda (sur ordinateur)</summary>
+      <ol>
+        <li>Ouvrez <a href="https://calendar.google.com" target="_blank" rel="noopener">calendar.google.com</a> sur un ordinateur.</li>
+        <li>Pour créer l'agenda dédié : à gauche, <b>« + » à côté de « Autres agendas » → Créer un agenda</b>.</li>
+        <li>Puis <b>« + » à côté de « Autres agendas » → Importer</b> (ou ⚙️ Paramètres → <b>Importer et exporter</b>).</li>
+        <li><b>Sélectionnez le fichier</b> .ics, choisissez l'<b>agenda de destination</b> (attention : par défaut, c'est votre agenda principal), puis cliquez sur <b>Importer</b>.</li>
+      </ol>
+      <p class="warnline">⚠️ L'application mobile Google Agenda (Android et iPhone) ne sait pas importer de fichier : l'import se fait uniquement depuis un ordinateur.</p>
+      <p class="links">
+        <a href="https://support.google.com/calendar/answer/37118?hl=fr" target="_blank" rel="noopener">📄 Google : importer des événements dans Google Agenda</a>
+      </p>
+    </details>
+
+    <details>
+      <summary>🤖 Android</summary>
+      <ol>
+        <li>Si votre agenda est <b>Google Agenda</b> : faites l'import depuis un ordinateur (voir la rubrique Google ci-dessus). Les événements apparaîtront ensuite automatiquement sur le téléphone.</li>
+        <li>Certaines applis d'agenda de constructeur (Samsung Calendar, par exemple) proposent d'importer le fichier quand on l'ouvre depuis <b>Fichiers → Téléchargements</b> : essayez, sinon passez par l'ordinateur.</li>
+      </ol>
+    </details>
+
+    <details>
+      <summary>📧 Outlook</summary>
+      <ol>
+        <li><b>Outlook.com / Outlook sur le web / nouvel Outlook :</b> Calendrier → <b>Ajouter un calendrier → Charger à partir d'un fichier</b> → Parcourir → choisissez le fichier et le calendrier de destination → <b>Importer</b>.</li>
+        <li><b>Outlook classique pour Windows :</b> <b>Fichier → Ouvrir et exporter → Importer/Exporter → « Importer un fichier iCalendar (.ics) ou vCalendar »</b> → sélectionnez le fichier → choisissez <b>Importer</b>.</li>
+      </ol>
+      <p class="links">
+        <a href="https://support.microsoft.com/fr-fr/office/import-or-subscribe-to-a-calendar-in-outlook-com-or-outlook-on-the-web-cff1429c-5af6-41ec-a5b4-74f2c278e98c" target="_blank" rel="noopener">📄 Microsoft : importer un calendrier dans Outlook.com / Outlook sur le web</a>
+        <a href="https://support.microsoft.com/fr-fr/office/import-calendars-into-outlook-8e8364e1-400e-4c0f-a573-fe76b5a2d379" target="_blank" rel="noopener">📄 Microsoft : importer des calendriers dans Outlook (Windows)</a>
+      </p>
+    </details>
+
+    <details>
+      <summary>👥 Partager l'agenda avec vos proches</summary>
+      <ol>
+        <li><b>Google Agenda</b> (sur ordinateur) : survolez l'agenda dans la colonne de gauche → ⋮ → <b>Paramètres et partage</b> → <b>Partager avec des personnes en particulier</b> → ajoutez les adresses e-mail et choisissez le niveau d'accès.</li>
+        <li><b>Apple (iCloud)</b> : dans Calendrier, touchez <b>Calendriers</b> → ⓘ à côté de l'agenda iCloud → <b>Ajouter une personne</b>. Les invités ont besoin d'un compte Apple ; sinon, activez le <b>calendrier public</b> pour obtenir un lien de lecture seule.</li>
+        <li>Choisissez bien le droit d'accès : <b>lecture seule</b> pour informer, <b>modification</b> seulement pour les personnes qui doivent pouvoir changer vos postes.</li>
+      </ol>
+      <p class="links">
+        <a href="https://support.google.com/calendar/answer/37082?hl=fr" target="_blank" rel="noopener">📄 Google : partager votre agenda</a>
+        <a href="https://www.youtube.com/watch?v=tI7cDSlHScM" target="_blank" rel="noopener">▶️ Vidéo Google Workspace : partager son agenda (en anglais)</a>
+        <a href="https://support.apple.com/fr-fr/guide/icloud/mm6b1a9479/icloud" target="_blank" rel="noopener">📄 Apple : partager un calendrier sur iCloud.com</a>
+      </p>
+    </details>
+
+    <details>
+      <summary id="helpTrouble">🛠️ En cas de problème</summary>
+      <ul>
+        <li><b>Événements en double :</b> l'import ajoute toujours les événements, il ne remplace rien. Pour une nouvelle période, réglez « Du / Au » sur les jours pas encore importés. Pour tout refaire : supprimez l'agenda dédié, recréez-le et réimportez.</li>
+        <li><b>Horaires décalés :</b> vérifiez le fuseau horaire choisi à l'étape 3, ainsi que le fuseau de votre agenda (Google : ⚙️ Paramètres → Fuseau horaire).</li>
+        <li><b>Rien ne s'importe / message d'erreur :</b> vérifiez que le fichier se termine bien par <code>.ics</code> et n'a pas été renommé en <code>.txt</code> lors du téléchargement.</li>
+        <li><b>Les événements sont dans le mauvais agenda :</b> c'est que l'agenda de destination n'a pas été choisi. Le plus simple : supprimer cet import et recommencer en sélectionnant l'agenda « Planning ».</li>
+        <li><b>Un poste a changé :</b> modifiez directement l'événement dans votre agenda, inutile de tout réimporter.</li>
+      </ul>
     </details>
   </section>
 
 </main>
+
+<footer class="foot">
+  <button type="button" class="linkbtn" id="btnIssue">Problème technique ?</button>
+</footer>
+
+<dialog id="issueDlg" aria-labelledby="dlgTitle">
+  <div class="dlg-step" data-step="1">
+    <h3 id="dlgTitle">Signaler un problème technique</h3>
+    <p>Est-ce que tu es sûr qu'il s'agit d'un problème lié à cette application ?</p>
+    <p class="note">Par exemple : le fichier n'est pas lu, les heures sont fausses, la page affiche une erreur… Les difficultés d'import dans l'agenda sont traitées dans la rubrique « En cas de problème ».</p>
+    <div class="btns"><button type="button" data-go="2">Oui</button><button type="button" class="alt" data-go="no">Non</button></div>
+  </div>
+  <div class="dlg-step" data-step="2" hidden>
+    <h3>Vraiment ?</h3>
+    <p>Est-ce que tu es vraiment certain ?</p>
+    <div class="btns"><button type="button" data-go="3">Oui</button><button type="button" class="alt" data-go="no">Non</button></div>
+  </div>
+  <div class="dlg-step" data-step="3" hidden>
+    <h3>Contacter l'administrateur</h3>
+    <p>Le lien ouvre un formulaire de signalement sur GitHub, déjà prérempli avec les informations techniques utiles. Décris ce qui s'est passé puis clique sur <b>« Create »</b> : l'administrateur reçoit une notification.</p>
+    <p class="warnline" id="issueNoRepo" hidden>Le lien de signalement n'est pas encore configuré : il s'active automatiquement une fois la page publiée sur GitHub Pages.</p>
+    <p class="warnline">⚠️ Le signalement est public : n'y colle pas ton planning ni d'informations personnelles. Un compte GitHub (gratuit) est nécessaire.</p>
+    <div class="btns"><a class="btnlink" id="issueLink" href="#" target="_blank" rel="noopener">Contacter l'administrateur</a><button type="button" class="alt" data-go="close">Fermer</button></div>
+  </div>
+  <div class="dlg-step" data-step="no" hidden>
+    <h3>D'accord !</h3>
+    <p>Jette un œil à la rubrique <b>« En cas de problème »</b> du guide d'import : la plupart des soucis s'y règlent en une minute.</p>
+    <div class="btns"><button type="button" data-go="help">Voir la rubrique</button><button type="button" class="alt" data-go="close">Fermer</button></div>
+  </div>
+</dialog>
 
 <script id="core">
 /* ===== Logique pure (sans DOM) : lecture du classeur et génération ICS ===== */
@@ -626,8 +762,73 @@ function download() {
 }
 async function share() {
   const file = new File([icsText], fileName, { type: 'text/calendar' });
-  try { await navigator.share({ files: [file], title: 'Planning' }); } catch (e) { /* annulé */ }
+  try {
+    if (!navigator.canShare || !navigator.canShare({ files: [file] })) throw new Error('unsupported');
+    await navigator.share({ files: [file], title: 'Planning' });
+  } catch (e) {
+    if (e && e.name === 'AbortError') return; // partage annulé par l'utilisateur
+    msg($('sumMsg'), 'Le partage de fichiers .ics n\'est pas possible dans ce navigateur : le fichier a été téléchargé à la place.', 'warn');
+    download();
+  }
 }
+
+/* ===== Signalement d'un problème technique (issue GitHub) ===== */
+// Dépôt GitHub qui reçoit les signalements, au format « propriétaire/dépôt ».
+// Laisser vide : il est détecté automatiquement quand la page est servie par GitHub Pages
+// (https://propriétaire.github.io/dépôt/).
+const GITHUB_REPO = '';
+let lastError = '';
+window.addEventListener('error', e => { lastError = String(e.message || e.error || ''); });
+
+function githubRepo() {
+  if (GITHUB_REPO) return GITHUB_REPO;
+  const h = location.hostname;
+  if (!h.endsWith('.github.io')) return '';
+  const owner = h.replace(/\.github\.io$/, '');
+  const repo = location.pathname.split('/').filter(Boolean)[0];
+  return `${owner}/${repo && !/\.html?$/.test(repo) ? repo : h}`;
+}
+function issueUrl() {
+  const repo = githubRepo(); if (!repo) return '';
+  const diag = [
+    `- Page : ${location.href.split('?')[0]}`,
+    `- Date : ${new Date().toLocaleString('fr-FR')}`,
+    `- Navigateur : ${navigator.userAgent}`,
+    `- Écran : ${window.innerWidth}×${window.innerHeight}`,
+    `- Bibliothèque Excel chargée : ${typeof XLSX !== 'undefined' ? 'oui' : 'non'}`,
+    `- Fichier lu : ${parsed ? `oui, ${parsed.days.length} jours (${parsed.first} → ${parsed.last})` : 'non'}`,
+    // Uniquement les messages d'erreur (jamais le message de succès, qui contient le nom de l'agent)
+    `- Message d'erreur affiché : ${(!parsed && $('fileMsg').textContent.trim()) || '—'}`,
+    `- Dernière erreur : ${lastError || '—'}`,
+  ].join('\n');
+  const body = `## Que s'est-il passé ?\n\n(décris le problème ici)\n\n## Qu'attendais-tu ?\n\n\n## Étapes pour reproduire\n1. \n2. \n\n---\n<details><summary>Informations techniques (automatiques)</summary>\n\n${diag}\n</details>\n\n⚠️ Ne pas joindre de planning ni de données personnelles.`;
+  return `https://github.com/${repo}/issues/new?` + new URLSearchParams({ title: '[Problème technique] ', body, labels: 'bug' });
+}
+
+const dlg = $('issueDlg');
+function dlgStep(s) { dlg.querySelectorAll('.dlg-step').forEach(d => d.hidden = d.dataset.step !== String(s)); }
+$('btnIssue').addEventListener('click', () => {
+  dlgStep(1);
+  if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
+});
+dlg.addEventListener('click', e => {
+  if (e.target === dlg) { dlg.close(); return; } // clic sur le fond
+  const go = e.target.dataset && e.target.dataset.go; if (!go) return;
+  if (go === 'close') return dlg.close();
+  if (go === 'help') {
+    dlg.close();
+    const d = $('helpTrouble').parentElement; d.open = true;
+    d.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  if (go === '3') {
+    const url = issueUrl(), a = $('issueLink');
+    if (url) { a.href = url; a.classList.remove('hidden'); }
+    else { a.classList.add('hidden'); }
+    $('issueNoRepo').hidden = !!url;
+  }
+  dlgStep(go);
+});
 
 // Initialisation
 const opts = store.get('opts', {});
@@ -647,8 +848,10 @@ const drop = $('drop');
 drop.addEventListener('drop', e => handleFile(e.dataTransfer.files[0]));
 $('btnDl').addEventListener('click', download);
 $('btnShare').addEventListener('click', share);
+// Bouton « Partager » : uniquement sur mobile / tablette, où le menu de partage du système est utile
 try {
-  if (navigator.canShare && navigator.canShare({ files: [new File(['x'], 'a.ics', { type: 'text/calendar' })] })) $('btnShare').classList.remove('hidden');
+  const touch = window.matchMedia('(pointer: coarse)').matches;
+  if (touch && navigator.canShare && navigator.canShare({ files: [new File(['x'], 'a.ics', { type: 'text/calendar' })] })) $('btnShare').classList.remove('hidden');
 } catch (e) {}
 </script>
 </body>
