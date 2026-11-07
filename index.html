@@ -1,1 +1,655 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Planning → Agenda</title>
+<meta name="theme-color" content="#1f3b4d">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='8' y='14' width='84' height='78' rx='14' fill='%231f3b4d'/><rect x='8' y='14' width='84' height='22' rx='10' fill='%23e07a3f'/><text x='50' y='80' font-size='42' text-anchor='middle' fill='white' font-family='sans-serif'>📅</text></svg>">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --ink: #1c2730; --muted: #5e6b75; --line: #dfe4e8; --bg: #f6f4ef; --card: #fff;
+    --accent: #1f3b4d; --accent2: #e07a3f; --ok: #2f7d4f; --warn: #a15c00; --err: #b3261e;
+    --work: #e8f0f6; --abs: #fdf0e6; --rest: #eef0f2;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  header { background: var(--accent); color: #fff; padding: 22px 18px 18px; }
+  header h1 { margin: 0; font-size: 1.35rem; letter-spacing: .2px; }
+  header p { margin: 4px 0 0; opacity: .8; font-size: .9rem; }
+  main { max-width: 760px; margin: 0 auto; padding: 16px 14px 60px; }
+  section.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  h2 { font-size: 1rem; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+  h2 .n { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent2); color: #fff; font-size: .8rem; }
+  .drop { display: block; border: 2px dashed #b9c4cc; border-radius: 12px; padding: 22px 14px; text-align: center; cursor: pointer; color: var(--muted); }
+  .drop.over { border-color: var(--accent2); background: #fff7f1; }
+  .drop strong { color: var(--accent); }
+  .drop input { display: none; }
+  .msg { margin-top: 10px; font-size: .92rem; }
+  .msg.ok { color: var(--ok); } .msg.err { color: var(--err); } .msg.warn { color: var(--warn); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+  .grid .full { grid-column: 1 / -1; }
+  label.f { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--muted); }
+  input[type=text], input[type=date], select { font: inherit; padding: 9px 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--ink); width: 100%; }
+  .check { display: flex; gap: 8px; align-items: center; font-size: .92rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th, td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { font-size: .75rem; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); font-weight: 600; }
+  td.code { font-weight: 700; white-space: nowrap; }
+  td input[type=text] { padding: 6px 8px; }
+  .tag { display: inline-block; font-size: .72rem; padding: 2px 7px; border-radius: 99px; white-space: nowrap; }
+  .tag.work { background: var(--work); color: #1f4f73; } .tag.abs { background: var(--abs); color: #8a4a17; } .tag.rest { background: var(--rest); color: #55606a; }
+  .preview { max-height: 360px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; }
+  .preview table { font-size: .86rem; }
+  .preview td { padding: 6px 8px; }
+  .preview tr.m td { background: #f2f4f6; font-weight: 700; font-size: .78rem; text-transform: capitalize; position: sticky; top: 0; }
+  .btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+  button { font: inherit; font-weight: 600; border: 0; border-radius: 11px; padding: 12px 18px; cursor: pointer; background: var(--accent); color: #fff; }
+  button.alt { background: #fff; color: var(--accent); border: 1px solid var(--accent); }
+  button:disabled { opacity: .45; cursor: default; }
+  .note { font-size: .82rem; color: var(--muted); }
+  .hidden { display: none !important; }
+  details summary { cursor: pointer; font-size: .9rem; color: var(--accent); }
+  details ol { padding-left: 20px; font-size: .88rem; color: var(--muted); }
+  h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); margin: 18px 0 6px; }
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .tile { background: var(--bg); border-radius: 10px; padding: 10px; }
+  .tile b { display: block; font-size: 1.25rem; color: var(--accent); line-height: 1.2; }
+  .tile span { font-size: .78rem; color: var(--muted); }
+  .tbl-check td:nth-child(n+2), .tbl-check th:nth-child(n+2) { text-align: right; }
+  .tbl-check tr.out td { color: #a7b0b7; }
+  .tbl-check tfoot td { font-weight: 700; border-bottom: 0; }
+  .ok-i { color: var(--ok); } .ko-i { color: var(--err); font-weight: 700; }
+  .abs-list { font-size: .9rem; }
+  .abs-list .grp { padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .abs-list .grp:last-child { border-bottom: 0; }
+  .abs-list .per { color: var(--muted); font-size: .85rem; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips span { background: var(--bg); border-radius: 99px; padding: 4px 10px; font-size: .85rem; }
+  .confirm { margin-top: 16px; padding: 12px; border-radius: 10px; background: #fff7f1; border: 1px solid #f1c9a9; font-weight: 600; }
+  .confirm input { width: 20px; height: 20px; flex: none; }
+  @media (max-width: 520px) { .tiles { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } th.hide-s, td.hide-s { display: none; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>📅 Planning → Agenda</h1>
+  <p>Convertis l'export Excel de votre logiciel RH en fichier importable (fichier .ics) dans n'importe quel agenda (Google agenda, Apple agenda, Outlook...)</p>
+</header>
+<main>
 
+  <section class="card">
+    <h2><span class="n">1</span> Export du planning</h2>
+    <label class="drop" id="drop">
+      <input type="file" id="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+      <strong>Choisir le fichier .xlsx</strong><br><span class="note">ou le glisser ici</span>
+    </label>
+    <div class="msg" id="fileMsg"></div>
+    <p class="note">🔒 Le fichier est lu uniquement dans votre navigateur : aucune donnée n'est envoyée sur internet.</p>
+  </section>
+
+  <section class="card hidden" id="secCodes">
+    <h2><span class="n">2</span> Codes à exporter</h2>
+    <table>
+      <thead><tr><th></th><th>Code</th><th>Titre dans l'agenda</th><th class="hide-s">Type</th><th class="hide-s">Jours</th></tr></thead>
+      <tbody id="codesBody"></tbody>
+    </table>
+    <p class="note">Vos choix (cases et titres) sont mémorisés sur cet appareil.</p>
+  </section>
+
+  <section class="card hidden" id="secOpts">
+    <h2><span class="n">3</span> Options</h2>
+    <div class="grid">
+      <label class="f">Du<input type="date" id="from"></label>
+      <label class="f">Au<input type="date" id="to"></label>
+      <label class="f">Préfixe des titres (utile dans un agenda partagé)<input type="text" id="prefix" placeholder="ex. Lise · "></label>
+      <label class="f">Rappel
+        <select id="alarm">
+          <option value="">Aucun</option>
+          <option value="30">30 min avant</option>
+          <option value="60">1 h avant</option>
+          <option value="120">2 h avant</option>
+          <option value="720">12 h avant</option>
+        </select>
+      </label>
+      <label class="f full">Fuseau horaire
+        <select id="tz">
+          <option value="Europe/Paris">Europe/Paris (métropole)</option>
+          <option value="America/Martinique">Martinique / Guadeloupe</option>
+          <option value="America/Cayenne">Guyane</option>
+          <option value="Indian/Reunion">La Réunion</option>
+          <option value="Indian/Mayotte">Mayotte</option>
+          <option value="Pacific/Noumea">Nouvelle-Calédonie</option>
+          <option value="Pacific/Tahiti">Polynésie (Tahiti)</option>
+        </select>
+      </label>
+      <label class="check full"><input type="checkbox" id="merge" checked> Regrouper les absences consécutives (ex. une seule ligne « Congé » du 2 au 7)</label>
+    </div>
+  </section>
+
+  <section class="card hidden" id="secCheck">
+    <h2><span class="n">4</span> Vérification</h2>
+    <div class="tiles" id="tiles"></div>
+    <div class="msg" id="ctrlMsg"></div>
+    <h3>Heures par mois</h3>
+    <table class="tbl-check">
+      <thead><tr><th>Mois</th><th>Postes</th><th>Heures calculées</th><th>Total RH</th><th></th></tr></thead>
+      <tbody id="monthBody"></tbody>
+    </table>
+    <h3>Congés et absences posés</h3>
+    <div id="absList" class="abs-list"></div>
+    <h3>Postes par code</h3>
+    <div id="codeCounts" class="chips"></div>
+    <label class="check confirm"><input type="checkbox" id="confirm"> J'ai vérifié la période, les heures et les congés : tout est correct.</label>
+  </section>
+
+  <section class="card hidden" id="secPreview">
+    <h2><span class="n">5</span> Aperçu et export</h2>
+    <div class="msg" id="sumMsg"></div>
+    <div class="preview"><table><tbody id="previewBody"></tbody></table></div>
+    <p class="note" id="lockNote">👆 Cochez la confirmation de l'étape 4 pour activer le téléchargement.</p>
+    <div class="btns">
+      <button id="btnDl">Télécharger le fichier .ics</button>
+      <button id="btnShare" class="alt hidden">Partager…</button>
+    </div>
+    <details style="margin-top:14px">
+      <summary>Comment importer le fichier ?</summary>
+      <ol>
+        <li><b>iPhone / iPad :</b> touchez le fichier téléchargé (app Fichiers ou bandeau de Safari), puis « Ajouter tout » et choisissez l'agenda partagé.</li>
+        <li><b>Mac :</b> double-cliquez sur le fichier et choisissez l'agenda dans Calendrier.</li>
+        <li><b>Google Agenda :</b> sur un ordinateur, calendar.google.com → ⚙️ Paramètres → « Importer et exporter » → choisissez le fichier et l'agenda de destination. L'appli mobile Google Agenda ne sait pas importer de fichier.</li>
+        <li>Importez dans un <b>agenda dédié</b> au planning. Pour une nouvelle période, réglez « Du / Au » pour ne pas réimporter des jours déjà présents.</li>
+      </ol>
+    </details>
+  </section>
+
+</main>
+
+<script id="core">
+/* ===== Logique pure (sans DOM) : lecture du classeur et génération ICS ===== */
+const MONTHS = { 'janvier':0,'février':1,'fevrier':1,'mars':2,'avril':3,'mai':4,'juin':5,'juillet':6,'août':7,'aout':7,'septembre':8,'octobre':9,'novembre':10,'décembre':11,'decembre':11 };
+const DAY_LETTERS = ['D','L','M','M','J','V','S']; // getUTCDay() -> lettre
+const DAY_RE = /^\s*([LMJVSD])\s+(\d{1,2})\s*$/;
+const PLAGE_RE = /(\d{1,2})[:hH](\d{2})\s*\/\s*(\d{1,2})[:hH](\d{2})/g;
+
+const norm = s => String(s ?? '').trim();
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`;
+const addDays = (d, n) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + n));
+
+function findSheet(wb, words) {
+  const names = wb.SheetNames;
+  const lc = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return names.find(n => words.every(w => lc(n).includes(w))) || null;
+}
+function rows(XLSX, ws) { return XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: null, blankrows: true }); }
+
+/* Grille annuelle : renvoie [{date:'YYYY-MM-DD', value:'...'}] */
+function readGrid(grid, startYear) {
+  let headerRow = -1;
+  for (let r = 0; r < Math.min(grid.length, 15); r++) {
+    if ((grid[r] || []).filter(v => MONTHS[norm(v).toLowerCase()] !== undefined).length >= 2) { headerRow = r; break; }
+  }
+  if (headerRow < 0) throw new Error('Ligne des mois introuvable.');
+  const header = grid[headerRow];
+  const blocks = [];
+  header.forEach((v, c) => { const m = MONTHS[norm(v).toLowerCase()]; if (m !== undefined) blocks.push({ c, m }); });
+  let year = startYear, prev = -1, lastDayRow = headerRow;
+  const out = [], warnings = [];
+  for (const b of blocks) {
+    if (b.m < prev) year++;
+    prev = b.m; b.key = `${year}-${pad(b.m + 1)}`;
+    for (let r = headerRow + 1; r < grid.length; r++) {
+      const label = norm((grid[r] || [])[b.c]);
+      const mm = label.match(DAY_RE);
+      if (!mm) continue;
+      lastDayRow = Math.max(lastDayRow, r);
+      const day = +mm[2];
+      const d = new Date(Date.UTC(year, b.m, day));
+      if (d.getUTCMonth() !== b.m) continue;
+      if (DAY_LETTERS[d.getUTCDay()] !== mm[1]) warnings.push(`${label} (${ymd(d)}) : jour de semaine incohérent`);
+      out.push({ date: ymd(d), value: (grid[r] || [])[b.c + 1] });
+    }
+  }
+  // Ligne(s) de totaux sous la grille : « 180h00 » sous chaque mois, total général ailleurs
+  const monthTotals = {}; let grandTotal = null;
+  const valueCols = new Set(blocks.map(b => b.c + 1));
+  for (let r = lastDayRow + 1; r <= lastDayRow + 3 && r < grid.length; r++) {
+    (grid[r] || []).forEach((v, c) => {
+      const min = parseHM(v); if (min === null || !/h/i.test(norm(v))) return;
+      const b = blocks.find(x => x.c + 1 === c);
+      if (b && monthTotals[b.key] === undefined) monthTotals[b.key] = min;
+      else if (!valueCols.has(c) || b) grandTotal = min;
+    });
+  }
+  return { cells: out, warnings, monthTotals, grandTotal };
+}
+
+/* « 12:00 », « 180h00 » -> minutes ; sinon null */
+function parseHM(v) {
+  const m = norm(v).match(/^(\d{1,4})\s*[:hH]\s*(\d{2})$/);
+  return m ? +m[1] * 60 + +m[2] : null;
+}
+
+/* Onglet « Détail codes » -> { code: {nom, plage, duree, cat:'horaire'|'evenement'|'lieu'} } */
+function readCodes(grid) {
+  const codes = {};
+  for (let r = 0; r < grid.length; r++) {
+    const row = grid[r] || [];
+    row.forEach((v, c) => {
+      if (norm(v).toLowerCase() !== 'code' || norm(row[c + 1]).toLowerCase() !== 'nom') return;
+      const catLabel = norm((grid[r - 1] || [])[c]).toLowerCase();
+      const cat = catLabel.includes('horaire') ? 'horaire' : catLabel.includes('lieu') ? 'lieu' : 'evenement';
+      const hasPlage = norm(row[c + 2]).toLowerCase() === 'plage';
+      for (let k = r + 1; k < grid.length; k++) {
+        const code = norm((grid[k] || [])[c]);
+        if (!code) continue;
+        codes[code] = { nom: norm(grid[k][c + 1]), plage: hasPlage ? norm(grid[k][c + 2]) : '', duree: hasPlage ? norm(grid[k][c + 3]) : '', cat };
+      }
+    });
+  }
+  return codes;
+}
+
+function parsePlages(s) {
+  const res = []; let m; PLAGE_RE.lastIndex = 0;
+  while ((m = PLAGE_RE.exec(String(s ?? '')))) res.push({ sh: +m[1], sm: +m[2], eh: +m[3], em: +m[4] });
+  return res;
+}
+
+/* Analyse complète du classeur */
+function parseWorkbook(XLSX, wb) {
+  const nCodes = findSheet(wb, ['planning', 'code']);
+  const nPlages = findSheet(wb, ['planning', 'plage']);
+  const nDetail = findSheet(wb, ['detail', 'code']);
+  const nDurees = findSheet(wb, ['planning', 'dur']);
+  if (!nCodes) throw new Error('Onglet « Planning codes » introuvable.');
+  const gCodes = rows(XLSX, wb.Sheets[nCodes]);
+  const title = norm((gCodes.slice(0, 3).flat().find(v => /planning/i.test(norm(v))) ) || '');
+  const ym = title.match(/du\s+(\d{2})\/(\d{2})\/(\d{2,4})\s+au\s+(\d{2})\/(\d{2})\/(\d{2,4})/i);
+  const yr = y => (y.length === 2 ? 2000 + +y : +y);
+  const startYear = ym ? yr(ym[3]) : new Date().getFullYear();
+  const person = (title.match(/\bde\s+(.+?)\s{2,}|\bde\s+(.+?)\s+Edit/i) || []).slice(1).find(Boolean) || '';
+
+  const A = readGrid(gCodes, startYear);
+  const plageByDate = {};
+  if (nPlages) readGrid(rows(XLSX, wb.Sheets[nPlages]), startYear).cells.forEach(c => plageByDate[c.date] = c.value);
+  const codes = nDetail ? readCodes(rows(XLSX, wb.Sheets[nDetail])) : {};
+  const durByDate = {};
+  if (nDurees) readGrid(rows(XLSX, wb.Sheets[nDurees]), startYear).cells.forEach(c => durByDate[c.date] = parseHM(c.value));
+
+  const days = [];
+  for (const c of A.cells) {
+    const code = norm(c.value);
+    if (!code) continue;
+    let plages = parsePlages(plageByDate[c.date]);
+    if (!plages.length && codes[code]) plages = parsePlages(codes[code].plage);
+    // Durée travaillée : onglet « Planning durées » en priorité, sinon longueur des plages
+    let minutes = durByDate[c.date] ?? null;
+    if (minutes === null) minutes = plages.reduce((s, p) => s + (((p.eh * 60 + p.em) - (p.sh * 60 + p.sm) + 1440) % 1440 || 1440), 0);
+    days.push({ date: c.date, code, plages, minutes });
+  }
+  // Catalogue des codes rencontrés
+  const used = {};
+  for (const d of days) {
+    const u = used[d.code] || (used[d.code] = { code: d.code, count: 0, info: codes[d.code] || null });
+    u.count++;
+    if (d.plages.length) u.timed = true;
+  }
+  for (const u of Object.values(used)) {
+    u.kind = u.timed ? 'work' : (u.info && u.info.cat === 'horaire') || u.code === '-' ? 'rest' : 'abs';
+    u.defaultInclude = u.kind !== 'rest';
+    u.defaultTitle = defaultTitle(u);
+  }
+  const dates = days.map(d => d.date).sort();
+  return { person, title, days, used, first: dates[0], last: dates[dates.length - 1], warnings: A.warnings,
+    monthTotals: A.monthTotals, grandTotal: A.grandTotal };
+}
+
+/* Récapitulatif de contrôle pour la période choisie */
+function summarize(parsed, cfg) {
+  const inRange = d => (!cfg.from || d >= cfg.from) && (!cfg.to || d <= cfg.to);
+  const sel = parsed.days.filter(d => inRange(d.date));
+  const kind = c => (parsed.used[c] || {}).kind;
+  const included = c => !!(cfg.codes[c] && cfg.codes[c].include);
+  // Mois
+  const months = {};
+  for (const d of parsed.days) {
+    const k = d.date.slice(0, 7);
+    const m = months[k] || (months[k] = { key: k, shifts: 0, minutes: 0, inRange: false, rh: parsed.monthTotals[k] ?? null });
+    if (kind(d.code) === 'work') m.shifts++;
+    m.minutes += d.minutes || 0;
+    if (inRange(d.date)) m.inRange = true;
+  }
+  const monthList = Object.values(months).sort((a, b) => a.key < b.key ? -1 : 1);
+  monthList.forEach(m => m.match = m.rh === null ? null : m.rh === m.minutes);
+  const fileMinutes = parsed.days.reduce((s, d) => s + (d.minutes || 0), 0);
+  // Période choisie
+  const work = sel.filter(d => kind(d.code) === 'work');
+  const workExported = work.filter(d => included(d.code));
+  const minutesSel = work.reduce((s, d) => s + (d.minutes || 0), 0);
+  const minutesExported = workExported.reduce((s, d) => s + (d.minutes || 0), 0);
+  const byCode = {};
+  for (const d of sel) byCode[d.code] = (byCode[d.code] || 0) + 1;
+  // Absences : périodes de jours consécutifs par code
+  const abs = {};
+  for (const d of sel) {
+    if (kind(d.code) !== 'abs') continue;
+    const a = abs[d.code] || (abs[d.code] = { code: d.code, days: 0, periods: [] });
+    a.days++;
+    const p = a.periods[a.periods.length - 1];
+    if (p && ymd(addDays(new Date(p.to + 'T00:00:00Z'), 1)) === d.date) { p.to = d.date; p.n++; }
+    else a.periods.push({ from: d.date, to: d.date, n: 1 });
+  }
+  const span = cfg.from && cfg.to ? Math.round((Date.parse(cfg.to) - Date.parse(cfg.from)) / 864e5) + 1 : sel.length;
+  return { from: cfg.from || parsed.first, to: cfg.to || parsed.last, span, plannedDays: sel.length,
+    shifts: work.length, minutesSel, minutesExported, shiftsExported: workExported.length,
+    months: monthList, fileMinutes, grandTotal: parsed.grandTotal,
+    grandMatch: parsed.grandTotal === null ? null : parsed.grandTotal === fileMinutes,
+    byCode, absences: Object.values(abs) };
+}
+
+const NICE = { 'ANNUEL': 'Congé annuel', 'FORMATION': 'Formation', 'RECUPERATION': 'Récupération', 'EXCEPTIONNEL': 'Absence exceptionnelle', 'HS A RECUPERER': 'Heures sup. à récupérer', 'FORMATION A RECUPERER': 'Formation à récupérer' };
+function defaultTitle(u) {
+  const nom = u.info ? u.info.nom : '';
+  if (u.kind === 'work') {
+    if (/^nuit/i.test(nom)) return 'Nuit';
+    const dur = u.info && u.info.duree ? u.info.duree.replace(/^0?(\d+):00$/, '$1h') : '';
+    return dur ? `Jour ${dur}` : (nom || u.code);
+  }
+  if (NICE[nom.toUpperCase()]) return NICE[nom.toUpperCase()];
+  if (nom) return nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
+  return u.code === '-' ? 'Non travaillé' : u.code;
+}
+
+/* Construit la liste d'événements selon les réglages */
+function buildEvents(parsed, cfg) {
+  const ev = [];
+  const inRange = d => (!cfg.from || d >= cfg.from) && (!cfg.to || d <= cfg.to);
+  for (const d of parsed.days) {
+    const s = cfg.codes[d.code]; if (!s || !s.include || !inRange(d.date)) continue;
+    const title = (cfg.prefix || '') + (s.title || d.code);
+    if (d.plages.length) {
+      d.plages.forEach((p, i) => {
+        const startMin = p.sh * 60 + p.sm, endMin = p.eh * 60 + p.em;
+        const base = new Date(d.date + 'T00:00:00Z');
+        ev.push({ type: 'timed', code: d.code, title, date: d.date,
+          start: { date: d.date, h: p.sh, m: p.sm },
+          end: { date: ymd(addDays(base, endMin <= startMin ? 1 : 0)), h: p.eh, m: p.em },
+          uid: `${d.date.replace(/-/g, '')}-${slug(d.code)}-${i}` });
+      });
+    } else {
+      const last = ev[ev.length - 1];
+      if (cfg.merge && last && last.type === 'allday' && last.code === d.code && last.endExcl === d.date) {
+        last.endExcl = ymd(addDays(new Date(d.date + 'T00:00:00Z'), 1)); last.lastDate = d.date;
+      } else {
+        ev.push({ type: 'allday', code: d.code, title, date: d.date, lastDate: d.date,
+          endExcl: ymd(addDays(new Date(d.date + 'T00:00:00Z'), 1)),
+          uid: `${d.date.replace(/-/g, '')}-${slug(d.code)}` });
+      }
+    }
+  }
+  return ev;
+}
+function slug(s) { return s.normalize('NFD').replace(/[^\w]/g, '') || 'x'; }
+
+/* ---- ICS ---- */
+const VTZ = {
+  'Europe/Paris': ['BEGIN:VTIMEZONE','TZID:Europe/Paris','BEGIN:DAYLIGHT','TZOFFSETFROM:+0100','TZOFFSETTO:+0200','TZNAME:CEST','DTSTART:19700329T020000','RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU','END:DAYLIGHT','BEGIN:STANDARD','TZOFFSETFROM:+0200','TZOFFSETTO:+0100','TZNAME:CET','DTSTART:19701025T030000','RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU','END:STANDARD','END:VTIMEZONE'],
+};
+function fixedTz(id, off, name) { return ['BEGIN:VTIMEZONE', `TZID:${id}`, 'BEGIN:STANDARD', `TZOFFSETFROM:${off}`, `TZOFFSETTO:${off}`, `TZNAME:${name}`, 'DTSTART:19700101T000000', 'END:STANDARD', 'END:VTIMEZONE']; }
+VTZ['America/Martinique'] = fixedTz('America/Martinique', '-0400', 'AST');
+VTZ['America/Cayenne'] = fixedTz('America/Cayenne', '-0300', '-03');
+VTZ['Indian/Reunion'] = fixedTz('Indian/Reunion', '+0400', '+04');
+VTZ['Indian/Mayotte'] = fixedTz('Indian/Mayotte', '+0300', 'EAT');
+VTZ['Pacific/Noumea'] = fixedTz('Pacific/Noumea', '+1100', '+11');
+VTZ['Pacific/Tahiti'] = fixedTz('Pacific/Tahiti', '-1000', '-10');
+
+const esc = s => String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+function fold(line) {
+  const enc = new TextEncoder(); const out = []; let cur = ''; let len = 0;
+  for (const ch of line) {
+    const b = enc.encode(ch).length;
+    if (len + b > (out.length ? 74 : 75)) { out.push(cur); cur = ''; len = 0; }
+    cur += ch; len += b;
+  }
+  out.push(cur);
+  return out.join('\r\n ');
+}
+const dt = (x) => `${x.date.replace(/-/g, '')}T${pad(x.h)}${pad(x.m)}00`;
+
+function toICS(events, cfg) {
+  const now = new Date();
+  const stamp = `${now.getUTCFullYear()}${pad(now.getUTCMonth()+1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}Z`;
+  const tz = cfg.tz || 'Europe/Paris';
+  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//planning-ics//FR', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', ...(VTZ[tz] || VTZ['Europe/Paris'])];
+  const who = slug(cfg.uidKey || 'planning').toLowerCase();
+  for (const e of events) {
+    L.push('BEGIN:VEVENT', `UID:${e.uid}-${who}@planning-ics`, `DTSTAMP:${stamp}`);
+    if (e.type === 'timed') {
+      L.push(`DTSTART;TZID=${tz}:${dt(e.start)}`, `DTEND;TZID=${tz}:${dt(e.end)}`);
+    } else {
+      L.push(`DTSTART;VALUE=DATE:${e.date.replace(/-/g, '')}`, `DTEND;VALUE=DATE:${e.endExcl.replace(/-/g, '')}`, 'TRANSP:TRANSPARENT');
+    }
+    L.push(`SUMMARY:${esc(e.title)}`, `DESCRIPTION:${esc('Code planning : ' + e.code)}`, `CATEGORIES:${esc(e.code)}`);
+    if (cfg.alarm && e.type === 'timed') {
+      L.push('BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${esc(e.title)}`, `TRIGGER:-PT${cfg.alarm}M`, 'END:VALARM');
+    }
+    L.push('END:VEVENT');
+  }
+  L.push('END:VCALENDAR');
+  return L.map(fold).join('\r\n') + '\r\n';
+}
+
+if (typeof module !== 'undefined') module.exports = { parseWorkbook, buildEvents, toICS, summarize };
+</script>
+
+<script>
+/* ===== Interface ===== */
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('planning-ics:' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('planning-ics:' + k, JSON.stringify(v)); } catch (e) {} }
+};
+let parsed = null, events = [], icsText = '', fileName = 'planning.ics';
+const MONTH_FMT = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+const DAY_FMT = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: '2-digit', timeZone: 'UTC' });
+const KIND_LABEL = { work: 'Travail', abs: 'Absence', rest: 'Repos' };
+
+function msg(el, text, cls) { el.className = 'msg ' + (cls || ''); el.textContent = text; }
+
+async function handleFile(file) {
+  if (!file) return;
+  if (typeof XLSX === 'undefined') { msg($('fileMsg'), 'La bibliothèque de lecture Excel n\'a pas pu se charger (connexion internet requise au premier chargement).', 'err'); return; }
+  try {
+    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+    parsed = parseWorkbook(XLSX, wb);
+    if (!parsed.days.length) throw new Error('Aucun jour planifié trouvé dans le fichier.');
+  } catch (e) {
+    parsed = null; ['secCodes', 'secOpts', 'secCheck', 'secPreview'].forEach(s => $(s).classList.add('hidden'));
+    msg($('fileMsg'), '❌ ' + e.message, 'err'); return;
+  }
+  const f = d => new Date(d + 'T00:00:00Z').toLocaleDateString('fr-FR', { timeZone: 'UTC' });
+  let t = `✅ ${parsed.days.length} jours lus, du ${f(parsed.first)} au ${f(parsed.last)}`;
+  if (parsed.person) t += ` — ${parsed.person}`;
+  msg($('fileMsg'), t, 'ok');
+  if (parsed.warnings.length) { const w = document.createElement('div'); w.className = 'msg warn'; w.textContent = '⚠️ ' + parsed.warnings.slice(0, 3).join(' · '); $('fileMsg').appendChild(w); }
+
+  const today = new Date(); const td = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  $('from').value = td > parsed.first && td <= parsed.last ? td : parsed.first;
+  $('to').value = parsed.last;
+  $('from').min = $('to').min = parsed.first; $('from').max = $('to').max = parsed.last;
+  renderCodes();
+  ['secCodes', 'secOpts', 'secCheck', 'secPreview'].forEach(s => $(s).classList.remove('hidden'));
+  $('confirm').checked = false;
+  refresh();
+}
+
+const fmtH = min => { const h = Math.floor(min / 60), m = min % 60; return m ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`; };
+const fmtD = d => new Date(d + 'T00:00:00Z').toLocaleDateString('fr-FR', { timeZone: 'UTC', day: '2-digit', month: '2-digit', year: 'numeric' });
+const fmtDs = d => new Date(d + 'T00:00:00Z').toLocaleDateString('fr-FR', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' });
+
+function renderCheck(cfg) {
+  const s = summarize(parsed, cfg);
+  const nAbsDays = s.absences.reduce((n, a) => n + a.days, 0);
+  const tile = (v, l) => `<div class="tile"><b>${v}</b><span>${l}</span></div>`;
+  $('tiles').innerHTML =
+    tile(`${s.span} j`, `du ${fmtD(s.from)}<br>au ${fmtD(s.to)}`) +
+    tile(fmtH(s.minutesSel), `travaillées sur la période`) +
+    tile(s.shifts, `postes`) +
+    tile(`${nAbsDays} j`, `congés / absences`);
+
+  // Contrôles automatiques
+  const notes = [];
+  let cls = 'ok';
+  if (s.grandMatch === true) notes.push(`✅ Total du fichier : ${fmtH(s.fileMinutes)} calculées = ${fmtH(s.grandTotal)} annoncées par le logiciel RH.`);
+  else if (s.grandMatch === false) { notes.push(`⚠️ Total du fichier : ${fmtH(s.fileMinutes)} calculées, mais ${fmtH(s.grandTotal)} annoncées par le logiciel RH.`); cls = 'warn'; }
+  const bad = s.months.filter(m => m.match === false);
+  if (bad.length) { notes.push(`⚠️ Écart d'heures sur : ${bad.map(m => MONTH_FMT.format(new Date(m.key + '-01T00:00:00Z'))).join(', ')}.`); cls = 'warn'; }
+  if (s.minutesExported !== s.minutesSel) { notes.push(`ℹ️ Avec les codes décochés, l'agenda contiendra ${s.shiftsExported} postes (${fmtH(s.minutesExported)}) au lieu de ${s.shifts}.`); if (cls === 'ok') cls = ''; }
+  if (parsed.warnings.length) { notes.push(`⚠️ ${parsed.warnings.length} date(s) incohérente(s) dans le fichier.`); cls = 'warn'; }
+  $('ctrlMsg').className = 'msg ' + cls;
+  $('ctrlMsg').innerHTML = notes.map(n => `<div>${n}</div>`).join('') || '';
+
+  // Tableau mensuel
+  const tb = $('monthBody'); tb.innerHTML = '';
+  for (const m of s.months) {
+    const tr = document.createElement('tr');
+    if (!m.inRange) tr.className = 'out';
+    const icon = m.match === true ? '<span class="ok-i">✓</span>' : m.match === false ? '<span class="ko-i">≠</span>' : '';
+    tr.innerHTML = `<td></td><td>${m.shifts}</td><td>${fmtH(m.minutes)}</td><td>${m.rh === null ? '—' : fmtH(m.rh)}</td><td>${icon}</td>`;
+    tr.firstChild.textContent = new Date(m.key + '-01T00:00:00Z').toLocaleDateString('fr-FR', { timeZone: 'UTC', month: 'short', year: 'numeric' });
+    tr.firstChild.style.whiteSpace = 'nowrap';
+    tr.firstChild.style.textTransform = 'capitalize';
+    tb.appendChild(tr);
+  }
+  const tf = tb.parentElement.querySelector('tfoot') || tb.parentElement.appendChild(document.createElement('tfoot'));
+  tf.innerHTML = `<tr><td>Total fichier</td><td>${s.months.reduce((n, m) => n + m.shifts, 0)}</td><td>${fmtH(s.fileMinutes)}</td><td>${s.grandTotal === null ? '—' : fmtH(s.grandTotal)}</td><td>${s.grandMatch === true ? '<span class="ok-i">✓</span>' : s.grandMatch === false ? '<span class="ko-i">≠</span>' : ''}</td></tr>`;
+
+  // Absences
+  const al = $('absList'); al.innerHTML = '';
+  if (!s.absences.length) al.innerHTML = '<span class="note">Aucun congé ni absence sur la période.</span>';
+  for (const a of s.absences.sort((x, y) => y.days - x.days)) {
+    const g = document.createElement('div'); g.className = 'grp';
+    const t = (cfg.codes[a.code] && cfg.codes[a.code].title) || a.code;
+    g.innerHTML = '<b></b> <span class="note"></span><div class="per"></div>';
+    g.children[0].textContent = `${t} (${a.code})`;
+    g.children[1].textContent = `— ${a.days} jour${a.days > 1 ? 's' : ''}`;
+    g.children[2].textContent = a.periods.map(p => p.n === 1 ? fmtDs(p.from) : `${fmtDs(p.from)} → ${fmtDs(p.to)} (${p.n} j)`).join(' · ');
+    al.appendChild(g);
+  }
+
+  // Comptage par code
+  const order = { work: 0, abs: 1, rest: 2 };
+  $('codeCounts').innerHTML = '';
+  Object.entries(s.byCode).sort((a, b) => order[parsed.used[a[0]].kind] - order[parsed.used[b[0]].kind] || b[1] - a[1]).forEach(([c, n]) => {
+    const sp = document.createElement('span'); sp.textContent = `${c} × ${n}`; $('codeCounts').appendChild(sp);
+  });
+}
+
+function updateLock() {
+  const ok = $('confirm').checked && events.length > 0;
+  $('btnDl').disabled = !ok; $('btnShare').disabled = !ok;
+  $('lockNote').classList.toggle('hidden', $('confirm').checked);
+}
+
+function renderCodes() {
+  const saved = store.get('codes', {});
+  const order = { work: 0, abs: 1, rest: 2 };
+  const list = Object.values(parsed.used).sort((a, b) => order[a.kind] - order[b.kind] || b.count - a.count);
+  $('codesBody').innerHTML = '';
+  for (const u of list) {
+    const s = saved[u.code] || {};
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><input type="checkbox" ${(s.include ?? u.defaultInclude) ? 'checked' : ''}></td>
+      <td class="code"></td><td><input type="text"></td>
+      <td class="hide-s"><span class="tag ${u.kind}">${KIND_LABEL[u.kind]}</span></td><td class="hide-s">${u.count}</td>`;
+    tr.querySelector('.code').textContent = u.code;
+    tr.querySelector('.code').title = u.info ? u.info.nom : '';
+    const ti = tr.querySelector('input[type=text]'); ti.value = s.title ?? u.defaultTitle; ti.placeholder = u.defaultTitle;
+    tr.dataset.code = u.code;
+    tr.querySelectorAll('input').forEach(i => i.addEventListener('input', refresh));
+    $('codesBody').appendChild(tr);
+  }
+}
+
+function readCfg() {
+  const codes = {};
+  $('codesBody').querySelectorAll('tr').forEach(tr => {
+    codes[tr.dataset.code] = { include: tr.querySelector('input[type=checkbox]').checked, title: tr.querySelector('input[type=text]').value.trim() || tr.querySelector('input[type=text]').placeholder };
+  });
+  return { codes, from: $('from').value, to: $('to').value, prefix: $('prefix').value, alarm: $('alarm').value, tz: $('tz').value, merge: $('merge').checked, uidKey: parsed.person || 'planning' };
+}
+
+function refresh() {
+  if (!parsed) return;
+  const cfg = readCfg();
+  const saved = store.get('codes', {}); Object.assign(saved, cfg.codes); store.set('codes', saved);
+  store.set('opts', { prefix: cfg.prefix, alarm: cfg.alarm, tz: cfg.tz, merge: cfg.merge });
+  events = buildEvents(parsed, cfg);
+  icsText = toICS(events, cfg);
+  fileName = `planning_${cfg.from || parsed.first}_${cfg.to || parsed.last}.ics`;
+  renderCheck(cfg);
+  renderPreview(cfg);
+  updateLock();
+}
+
+function renderPreview(cfg) {
+  const tb = $('previewBody'); tb.innerHTML = '';
+  const nWork = events.filter(e => e.type === 'timed').length, nAbs = events.length - nWork;
+  msg($('sumMsg'), events.length ? `${events.length} événements : ${nWork} postes, ${nAbs} absences / journées.` : 'Aucun événement avec ces réglages.', events.length ? '' : 'warn');
+  let month = '';
+  const frag = document.createDocumentFragment();
+  for (const e of events) {
+    const d = new Date(e.date + 'T00:00:00Z');
+    const m = MONTH_FMT.format(d);
+    if (m !== month) { month = m; const r = document.createElement('tr'); r.className = 'm'; r.innerHTML = '<td colspan="3"></td>'; r.firstChild.textContent = m; frag.appendChild(r); }
+    const r = document.createElement('tr');
+    let when;
+    if (e.type === 'timed') when = `${String(e.start.h).padStart(2,'0')}:${String(e.start.m).padStart(2,'0')} → ${String(e.end.h).padStart(2,'0')}:${String(e.end.m).padStart(2,'0')}${e.end.date !== e.start.date ? ' (+1)' : ''}`;
+    else when = e.lastDate !== e.date ? `jusqu'au ${DAY_FMT.format(new Date(e.lastDate + 'T00:00:00Z'))}` : 'journée';
+    r.innerHTML = '<td></td><td></td><td></td>';
+    r.children[0].textContent = DAY_FMT.format(d); r.children[1].textContent = when; r.children[2].textContent = e.title;
+    frag.appendChild(r);
+  }
+  tb.appendChild(frag);
+}
+
+function download() {
+  const blob = new Blob([icsText], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = fileName;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+async function share() {
+  const file = new File([icsText], fileName, { type: 'text/calendar' });
+  try { await navigator.share({ files: [file], title: 'Planning' }); } catch (e) { /* annulé */ }
+}
+
+// Initialisation
+const opts = store.get('opts', {});
+if (opts.prefix) $('prefix').value = opts.prefix;
+if (opts.alarm) $('alarm').value = opts.alarm;
+if (opts.tz) $('tz').value = opts.tz;
+if (opts.merge === false) $('merge').checked = false;
+['from', 'to', 'prefix', 'alarm', 'tz', 'merge'].forEach(id => $(id).addEventListener('input', refresh));
+['tz', 'alarm', 'merge'].forEach(id => $(id).addEventListener('change', refresh));
+$('file').addEventListener('change', e => handleFile(e.target.files[0]));
+$('confirm').addEventListener('change', updateLock);
+// Changer la période impose de revérifier
+['from', 'to'].forEach(id => $(id).addEventListener('change', () => { $('confirm').checked = false; updateLock(); }));
+const drop = $('drop');
+['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => handleFile(e.dataTransfer.files[0]));
+$('btnDl').addEventListener('click', download);
+$('btnShare').addEventListener('click', share);
+try {
+  if (navigator.canShare && navigator.canShare({ files: [new File(['x'], 'a.ics', { type: 'text/calendar' })] })) $('btnShare').classList.remove('hidden');
+} catch (e) {}
+</script>
+</body>
+</html>
