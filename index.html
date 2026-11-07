@@ -4,26 +4,35 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Planning → Agenda</title>
-<meta name="theme-color" content="#1f3b4d">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='8' y='14' width='84' height='78' rx='14' fill='%231f3b4d'/><rect x='8' y='14' width='84' height='22' rx='10' fill='%23e07a3f'/><text x='50' y='80' font-size='42' text-anchor='middle' fill='white' font-family='sans-serif'>📅</text></svg>">
+<meta name="theme-color" content="#3e444a">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='8' y='14' width='84' height='78' rx='14' fill='%233e444a'/><rect x='8' y='14' width='84' height='22' rx='10' fill='%2300ae5a'/><text x='50' y='80' font-size='42' text-anchor='middle' fill='white' font-family='sans-serif'>📅</text></svg>">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
   :root {
-    --ink: #1c2730; --muted: #5e6b75; --line: #dfe4e8; --bg: #f6f4ef; --card: #fff;
-    --accent: #1f3b4d; --accent2: #e07a3f; --ok: #2f7d4f; --warn: #a15c00; --err: #b3261e;
-    --work: #e8f0f6; --abs: #fdf0e6; --rest: #eef0f2;
+    /* Palette CHPF (chpf-palette.css) */
+    --chpf-ardoise: #3e444a; --chpf-vert: #00ae5a; --chpf-bleu: #22bffd; --chpf-orange: #ffa837; --chpf-corail: #ff5151;
+    --chpf-vert-clair: #a6dd61; --chpf-anthracite: #222222;
+    --chpf-gris-900: #515151; --chpf-gris-700: #666666; --chpf-gris-500: #808080; --chpf-gris-200: #dddddd; --chpf-gris-100: #f1f1f1; --chpf-gris-50: #f6f6f6;
+    --font-body: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-display: "Montserrat", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    /* Rôles. Les couleurs vives du logo ne servent qu'aux aplats et décors ;
+       le texte coloré utilise des variantes foncées (contraste AA ≥ 4,5:1). */
+    --ink: var(--chpf-anthracite); --muted: var(--chpf-gris-700); --line: var(--chpf-gris-200); --bg: var(--chpf-gris-50); --card: #fff;
+    --accent: var(--chpf-ardoise); --accent2: var(--chpf-vert);
+    --ok: #00753d; --warn: #8f5600; --err: #c62828;
+    --work: #e4f7ff; --abs: #fff2df; --rest: var(--chpf-gris-100);
   }
   * { box-sizing: border-box; }
-  body { margin: 0; font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
-  header { background: var(--accent); color: #fff; padding: 22px 18px 18px; }
-  header h1 { margin: 0; font-size: 1.35rem; letter-spacing: .2px; }
+  body { margin: 0; font: 16px/1.45 var(--font-body); color: var(--ink); background: var(--bg); }
+  header { background: var(--accent); color: #fff; padding: 22px 18px 18px; border-bottom: 5px solid; border-image: linear-gradient(90deg, var(--chpf-vert) 0 25%, var(--chpf-bleu) 25% 50%, var(--chpf-orange) 50% 75%, var(--chpf-corail) 75%) 1; }
+  header h1 { margin: 0; font-family: var(--font-display); font-size: 1.35rem; letter-spacing: .2px; }
   header p { margin: 4px 0 0; opacity: .8; font-size: .9rem; }
   main { max-width: 760px; margin: 0 auto; padding: 16px 14px 60px; }
   section.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
-  h2 { font-size: 1rem; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
-  h2 .n { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent2); color: #fff; font-size: .8rem; }
-  .drop { display: block; border: 2px dashed #b9c4cc; border-radius: 12px; padding: 22px 14px; text-align: center; cursor: pointer; color: var(--muted); }
-  .drop.over { border-color: var(--accent2); background: #fff7f1; }
+  h2 { font-family: var(--font-display); color: var(--accent); font-size: 1rem; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+  h2 .n { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--chpf-vert-clair); color: var(--accent); font-weight: 700; font-size: .8rem; }
+  .drop { display: block; border: 2px dashed var(--chpf-gris-500); border-radius: 12px; padding: 22px 14px; text-align: center; cursor: pointer; color: var(--muted); }
+  .drop.over { border-color: var(--accent2); background: #ebf8f1; }
   .drop strong { color: var(--accent); }
   .drop input { display: none; }
   .msg { margin-top: 10px; font-size: .92rem; }
@@ -39,14 +48,16 @@
   td.code { font-weight: 700; white-space: nowrap; }
   td input[type=text] { padding: 6px 8px; }
   .tag { display: inline-block; font-size: .72rem; padding: 2px 7px; border-radius: 99px; white-space: nowrap; }
-  .tag.work { background: var(--work); color: #1f4f73; } .tag.abs { background: var(--abs); color: #8a4a17; } .tag.rest { background: var(--rest); color: #55606a; }
+  .tag.work { background: var(--work); color: #0a5c7d; } .tag.abs { background: var(--abs); color: #8f5600; } .tag.rest { background: var(--rest); color: var(--chpf-gris-900); }
   .preview { max-height: 360px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; }
   .preview table { font-size: .86rem; }
   .preview td { padding: 6px 8px; }
-  .preview tr.m td { background: #f2f4f6; font-weight: 700; font-size: .78rem; text-transform: capitalize; position: sticky; top: 0; }
+  .preview tr.m td { background: var(--chpf-gris-100); font-weight: 700; font-size: .78rem; text-transform: capitalize; position: sticky; top: 0; }
   .btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
   button { font: inherit; font-weight: 600; border: 0; border-radius: 11px; padding: 12px 18px; cursor: pointer; background: var(--accent); color: #fff; }
   button.alt { background: #fff; color: var(--accent); border: 1px solid var(--accent); }
+  button:hover:not(:disabled), .btnlink:hover { background: var(--chpf-anthracite); }
+  button.alt:hover:not(:disabled) { background: var(--chpf-gris-100); }
   button:disabled { opacity: .45; cursor: default; }
   .note { font-size: .82rem; color: var(--muted); }
   .hidden { display: none !important; }
@@ -58,7 +69,7 @@
   .tile b { display: block; font-size: 1.25rem; color: var(--accent); line-height: 1.2; }
   .tile span { font-size: .78rem; color: var(--muted); }
   .tbl-check td:nth-child(n+2), .tbl-check th:nth-child(n+2) { text-align: right; }
-  .tbl-check tr.out td { color: #a7b0b7; }
+  .tbl-check tr.out td { color: var(--chpf-gris-500); }
   .tbl-check tfoot td { font-weight: 700; border-bottom: 0; }
   .ok-i { color: var(--ok); } .ko-i { color: var(--err); font-weight: 700; }
   .abs-list { font-size: .9rem; }
@@ -67,7 +78,7 @@
   .abs-list .per { color: var(--muted); font-size: .85rem; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chips span { background: var(--bg); border-radius: 99px; padding: 4px 10px; font-size: .85rem; }
-  .confirm { margin-top: 16px; padding: 12px; border-radius: 10px; background: #fff7f1; border: 1px solid #f1c9a9; font-weight: 600; }
+  .confirm { margin-top: 16px; padding: 12px; border-radius: 10px; background: #fff6e8; border: 1px solid var(--chpf-orange); font-weight: 600; }
   .confirm input { width: 20px; height: 20px; flex: none; }
   .help details { border-top: 1px solid var(--line); padding: 10px 0; }
   .help details:last-child { padding-bottom: 0; }
@@ -77,15 +88,15 @@
   .help li { margin-bottom: 6px; }
   .help a { color: var(--accent); }
   .help code { background: var(--bg); padding: 1px 5px; border-radius: 4px; }
-  .tip { background: #eef5f0; border: 1px solid #cfe3d5; border-radius: 10px; padding: 10px 12px; font-size: .9rem; margin-bottom: 8px; }
+  .tip { background: #ebf8f1; border: 1px solid #9fdcbd; border-radius: 10px; padding: 10px 12px; font-size: .9rem; margin-bottom: 8px; }
   .warnline { font-size: .88rem; color: var(--warn); margin: 6px 0; }
   .links { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 2px; }
-  .links a { display: block; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; text-decoration: none; font-size: .88rem; background: #fbfbfa; }
+  .links a { display: block; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; text-decoration: none; font-size: .88rem; background: var(--chpf-gris-50); }
   .links a:hover { border-color: var(--accent); }
   .foot { text-align: center; padding: 0 14px 28px; margin-top: -40px; }
   .linkbtn { background: none; border: 0; padding: 4px; color: var(--muted); font-size: .8rem; font-weight: 400; text-decoration: underline; cursor: pointer; }
   dialog { border: 0; border-radius: 16px; padding: 20px; width: min(420px, calc(100vw - 32px)); box-shadow: 0 20px 60px rgba(0,0,0,.25); color: var(--ink); }
-  dialog::backdrop { background: rgba(20, 30, 40, .45); }
+  dialog::backdrop { background: rgba(34, 34, 34, .5); }
   dialog h3 { margin: 0 0 8px; font-size: 1.05rem; text-transform: none; letter-spacing: 0; color: var(--ink); }
   dialog p { margin: 0 0 10px; font-size: .95rem; }
   .btnlink { display: inline-block; font-weight: 600; border-radius: 11px; padding: 12px 18px; background: var(--accent); color: #fff; text-decoration: none; }
@@ -132,17 +143,6 @@
           <option value="60">1 h avant</option>
           <option value="120">2 h avant</option>
           <option value="720">12 h avant</option>
-        </select>
-      </label>
-      <label class="f full">Fuseau horaire
-        <select id="tz">
-          <option value="Europe/Paris">Europe/Paris (métropole)</option>
-          <option value="America/Martinique">Martinique / Guadeloupe</option>
-          <option value="America/Cayenne">Guyane</option>
-          <option value="Indian/Reunion">La Réunion</option>
-          <option value="Indian/Mayotte">Mayotte</option>
-          <option value="Pacific/Noumea">Nouvelle-Calédonie</option>
-          <option value="Pacific/Tahiti">Polynésie (Tahiti)</option>
         </select>
       </label>
       <label class="check full"><input type="checkbox" id="merge" checked> Regrouper les absences consécutives (ex. une seule ligne « Congé » du 2 au 7)</label>
@@ -263,7 +263,7 @@
       <summary id="helpTrouble">🛠️ En cas de problème</summary>
       <ul>
         <li><b>Événements en double :</b> l'import ajoute toujours les événements, il ne remplace rien. Pour une nouvelle période, réglez « Du / Au » sur les jours pas encore importés. Pour tout refaire : supprimez l'agenda dédié, recréez-le et réimportez.</li>
-        <li><b>Horaires décalés :</b> vérifiez le fuseau horaire choisi à l'étape 3, ainsi que le fuseau de votre agenda (Google : ⚙️ Paramètres → Fuseau horaire).</li>
+        <li><b>Horaires décalés :</b> les horaires sont exprimés à l'heure de Tahiti (UTC−10) ; vérifiez le fuseau de votre agenda (Google : ⚙️ Paramètres → Fuseau horaire).</li>
         <li><b>Rien ne s'importe / message d'erreur :</b> vérifiez que le fichier se termine bien par <code>.ics</code> et n'a pas été renommé en <code>.txt</code> lors du téléchargement.</li>
         <li><b>Les événements sont dans le mauvais agenda :</b> c'est que l'agenda de destination n'a pas été choisi. Le plus simple : supprimer cet import et recommencer en sélectionnant l'agenda « Planning ».</li>
         <li><b>Un poste a changé :</b> modifiez directement l'événement dans votre agenda, inutile de tout réimporter.</li>
@@ -301,6 +301,14 @@
     <p>Jette un œil à la rubrique <b>« En cas de problème »</b> du guide d'import : la plupart des soucis s'y règlent en une minute.</p>
     <div class="btns"><button type="button" data-go="help">Voir la rubrique</button><button type="button" class="alt" data-go="close">Fermer</button></div>
   </div>
+</dialog>
+
+<dialog id="warnDlg" aria-labelledby="warnTitle">
+  <h3 id="warnTitle">⚠️ Avertissement</h3>
+  <p>Cet outil <b>n'est pas une application officielle du CHPF</b> (c'est développé par un mec tout seul dans sa chambre). Il est destiné à vous aider à gérer votre planning et votre temps de travail sur votre agenda personnel.</p>
+  <p>En cas de bug, ou d'évolution, n'hésitez pas à utiliser le formulaire <b>« Problème technique »</b> en bas de page.</p>
+  <p>Māuruuru 🌺</p>
+  <div class="btns"><button type="button" id="warnOk">J'ai compris</button></div>
 </dialog>
 
 <script id="core">
@@ -532,16 +540,9 @@ function buildEvents(parsed, cfg) {
 function slug(s) { return s.normalize('NFD').replace(/[^\w]/g, '') || 'x'; }
 
 /* ---- ICS ---- */
-const VTZ = {
-  'Europe/Paris': ['BEGIN:VTIMEZONE','TZID:Europe/Paris','BEGIN:DAYLIGHT','TZOFFSETFROM:+0100','TZOFFSETTO:+0200','TZNAME:CEST','DTSTART:19700329T020000','RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU','END:DAYLIGHT','BEGIN:STANDARD','TZOFFSETFROM:+0200','TZOFFSETTO:+0100','TZNAME:CET','DTSTART:19701025T030000','RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU','END:STANDARD','END:VTIMEZONE'],
-};
-function fixedTz(id, off, name) { return ['BEGIN:VTIMEZONE', `TZID:${id}`, 'BEGIN:STANDARD', `TZOFFSETFROM:${off}`, `TZOFFSETTO:${off}`, `TZNAME:${name}`, 'DTSTART:19700101T000000', 'END:STANDARD', 'END:VTIMEZONE']; }
-VTZ['America/Martinique'] = fixedTz('America/Martinique', '-0400', 'AST');
-VTZ['America/Cayenne'] = fixedTz('America/Cayenne', '-0300', '-03');
-VTZ['Indian/Reunion'] = fixedTz('Indian/Reunion', '+0400', '+04');
-VTZ['Indian/Mayotte'] = fixedTz('Indian/Mayotte', '+0300', 'EAT');
-VTZ['Pacific/Noumea'] = fixedTz('Pacific/Noumea', '+1100', '+11');
-VTZ['Pacific/Tahiti'] = fixedTz('Pacific/Tahiti', '-1000', '-10');
+// Fuseau imposé : Polynésie française (Tahiti, UTC−10, sans heure d'été)
+const TZ = 'Pacific/Tahiti';
+const VTZ = ['BEGIN:VTIMEZONE', `TZID:${TZ}`, 'BEGIN:STANDARD', 'TZOFFSETFROM:-1000', 'TZOFFSETTO:-1000', 'TZNAME:-10', 'DTSTART:19700101T000000', 'END:STANDARD', 'END:VTIMEZONE'];
 
 const esc = s => String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
 function fold(line) {
@@ -559,13 +560,12 @@ const dt = (x) => `${x.date.replace(/-/g, '')}T${pad(x.h)}${pad(x.m)}00`;
 function toICS(events, cfg) {
   const now = new Date();
   const stamp = `${now.getUTCFullYear()}${pad(now.getUTCMonth()+1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}Z`;
-  const tz = cfg.tz || 'Europe/Paris';
-  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//planning-ics//FR', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', ...(VTZ[tz] || VTZ['Europe/Paris'])];
+  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//planning-ics//FR', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', ...VTZ];
   const who = slug(cfg.uidKey || 'planning').toLowerCase();
   for (const e of events) {
     L.push('BEGIN:VEVENT', `UID:${e.uid}-${who}@planning-ics`, `DTSTAMP:${stamp}`);
     if (e.type === 'timed') {
-      L.push(`DTSTART;TZID=${tz}:${dt(e.start)}`, `DTEND;TZID=${tz}:${dt(e.end)}`);
+      L.push(`DTSTART;TZID=${TZ}:${dt(e.start)}`, `DTEND;TZID=${TZ}:${dt(e.end)}`);
     } else {
       L.push(`DTSTART;VALUE=DATE:${e.date.replace(/-/g, '')}`, `DTEND;VALUE=DATE:${e.endExcl.replace(/-/g, '')}`, 'TRANSP:TRANSPARENT');
     }
@@ -716,14 +716,14 @@ function readCfg() {
   $('codesBody').querySelectorAll('tr').forEach(tr => {
     codes[tr.dataset.code] = { include: tr.querySelector('input[type=checkbox]').checked, title: tr.querySelector('input[type=text]').value.trim() || tr.querySelector('input[type=text]').placeholder };
   });
-  return { codes, from: $('from').value, to: $('to').value, prefix: $('prefix').value, alarm: $('alarm').value, tz: $('tz').value, merge: $('merge').checked, uidKey: parsed.person || 'planning' };
+  return { codes, from: $('from').value, to: $('to').value, prefix: $('prefix').value, alarm: $('alarm').value, merge: $('merge').checked, uidKey: parsed.person || 'planning' };
 }
 
 function refresh() {
   if (!parsed) return;
   const cfg = readCfg();
   const saved = store.get('codes', {}); Object.assign(saved, cfg.codes); store.set('codes', saved);
-  store.set('opts', { prefix: cfg.prefix, alarm: cfg.alarm, tz: cfg.tz, merge: cfg.merge });
+  store.set('opts', { prefix: cfg.prefix, alarm: cfg.alarm, merge: cfg.merge });
   events = buildEvents(parsed, cfg);
   icsText = toICS(events, cfg);
   fileName = `planning_${cfg.from || parsed.first}_${cfg.to || parsed.last}.ics`;
@@ -805,6 +805,11 @@ function issueUrl() {
   return `https://github.com/${repo}/issues/new?` + new URLSearchParams({ title: '[Problème technique] ', body, labels: 'bug' });
 }
 
+// Avertissement affiché à chaque ouverture de la page
+const warnDlg = $('warnDlg');
+$('warnOk').addEventListener('click', () => warnDlg.close());
+if (warnDlg.showModal) warnDlg.showModal(); else warnDlg.setAttribute('open', '');
+
 const dlg = $('issueDlg');
 function dlgStep(s) { dlg.querySelectorAll('.dlg-step').forEach(d => d.hidden = d.dataset.step !== String(s)); }
 $('btnIssue').addEventListener('click', () => {
@@ -834,10 +839,9 @@ dlg.addEventListener('click', e => {
 const opts = store.get('opts', {});
 if (opts.prefix) $('prefix').value = opts.prefix;
 if (opts.alarm) $('alarm').value = opts.alarm;
-if (opts.tz) $('tz').value = opts.tz;
 if (opts.merge === false) $('merge').checked = false;
-['from', 'to', 'prefix', 'alarm', 'tz', 'merge'].forEach(id => $(id).addEventListener('input', refresh));
-['tz', 'alarm', 'merge'].forEach(id => $(id).addEventListener('change', refresh));
+['from', 'to', 'prefix', 'alarm', 'merge'].forEach(id => $(id).addEventListener('input', refresh));
+['alarm', 'merge'].forEach(id => $(id).addEventListener('change', refresh));
 $('file').addEventListener('change', e => handleFile(e.target.files[0]));
 $('confirm').addEventListener('change', updateLock);
 // Changer la période impose de revérifier

@@ -36,7 +36,7 @@ Le parcours utilisateur suit 5 étapes visibles sur la page :
 |---|---|
 | **1. Export du planning** | Sélection (ou glisser-déposer) du `.xlsx` exporté du logiciel RH. |
 | **2. Codes à exporter** | Liste des codes rencontrés (J1, N1, CA…) : case à cocher pour les inclure, titre personnalisable dans l'agenda. |
-| **3. Options** | Période « Du / Au », préfixe des titres, rappel, fuseau horaire, regroupement des absences consécutives. |
+| **3. Options** | Période « Du / Au », préfixe des titres, rappel, regroupement des absences consécutives. |
 | **4. Vérification** | Chiffres clés, heures par mois comparées au logiciel RH, congés posés, confirmation obligatoire. |
 | **5. Aperçu et export** | Liste des événements, bouton **Télécharger** (et **Partager…** sur mobile). |
 
@@ -175,7 +175,7 @@ parsed = {
 cfg = {
   codes: { J1: { include: true, title: 'Jour 12h' }, RH: { include: false, title: 'Repos hebdo' }, … },
   from: '2026-11-07', to: '2026-11-30',
-  prefix: 'Lise · ', alarm: '60', tz: 'Europe/Paris', merge: true, uidKey: 'NOM PRÉNOM',
+  prefix: 'Lise · ', alarm: '60', merge: true, uidKey: 'NOM PRÉNOM',
 };
 ```
 
@@ -254,14 +254,14 @@ PRODID:-//planning-ics//FR
 CALSCALE:GREGORIAN
 METHOD:PUBLISH
 BEGIN:VTIMEZONE
-TZID:Europe/Paris
+TZID:Pacific/Tahiti
 …
 END:VTIMEZONE
 BEGIN:VEVENT
 UID:20260210-N1-0-nomprenom@planning-ics
 DTSTAMP:20261107T214900Z
-DTSTART;TZID=Europe/Paris:20260210T190000
-DTEND;TZID=Europe/Paris:20260211T070000
+DTSTART;TZID=Pacific/Tahiti:20260210T190000
+DTEND;TZID=Pacific/Tahiti:20260211T070000
 SUMMARY:Nuit
 DESCRIPTION:Code planning : N1
 CATEGORIES:N1
@@ -288,7 +288,7 @@ END:VCALENDAR
 | Échappement | `esc()` : `\` `;` `,` et retours à la ligne |
 | Événement journée | `DTSTART;VALUE=DATE` + `DTEND` **exclusif** (lendemain du dernier jour) |
 | Absences | `TRANSP:TRANSPARENT` (n'apparaissent pas « occupé ») |
-| Fuseau | bloc `VTIMEZONE` inclus + `TZID` sur chaque horaire |
+| Fuseau | imposé `Pacific/Tahiti` (UTC−10) : bloc `VTIMEZONE` inclus + `TZID` sur chaque horaire |
 | Rappel | `VALARM` (`TRIGGER:-PT{n}M`) uniquement sur les postes horaires |
 
 ### 5.3 UID stables
@@ -317,26 +317,16 @@ Le lien ouvre `https://github.com/<dépôt>/issues/new?title=…&body=…&labels
 
 > 🔔 Pour recevoir les notifications : dépôt → **Watch** → *All activity* (ou au minimum *Issues*), et vérifiez vos réglages sur <https://github.com/settings/notifications>. Le label `bug` n'est appliqué que si l'auteur a les droits sur le dépôt ; sinon, GitHub l'ignore sans erreur.
 
-### 6.2 Fuseaux horaires
+### 6.2 Fuseau horaire
 
-Les fuseaux proposés sont définis dans le `<select id="tz">` et dans l'objet `VTZ` :
+Le fuseau est **imposé** : `Pacific/Tahiti` (Polynésie française, UTC−10, sans heure d'été). Il est défini par les constantes `TZ` et `VTZ` du bloc core :
 
 ```js
-VTZ['Europe/Paris'] = [ /* bloc avec heure d'été (dernier dimanche de mars / octobre) */ ];
-VTZ['Indian/Reunion'] = fixedTz('Indian/Reunion', '+0400', '+04');   // fuseaux sans heure d'été
+const TZ = 'Pacific/Tahiti';
+const VTZ = ['BEGIN:VTIMEZONE', `TZID:${TZ}`, /* STANDARD -1000 */ 'END:VTIMEZONE'];
 ```
 
-**Ajouter un fuseau :**
-
-```html
-<!-- 1. dans <select id="tz"> -->
-<option value="America/Miquelon">Saint-Pierre-et-Miquelon</option>
-```
-```js
-// 2. dans le bloc core, à côté des autres fixedTz(…)
-//    ⚠️ Miquelon a une heure d'été : il faut un bloc DAYLIGHT/STANDARD complet comme Europe/Paris
-VTZ['America/Miquelon'] = [ 'BEGIN:VTIMEZONE', 'TZID:America/Miquelon', /* … */ 'END:VTIMEZONE' ];
-```
+Pour changer de fuseau, modifiez ces deux constantes (un fuseau avec heure d'été nécessite un bloc `DAYLIGHT`/`STANDARD` complet).
 
 ### 6.3 Bibliothèque SheetJS
 
@@ -353,7 +343,7 @@ VTZ['America/Miquelon'] = [ 'BEGIN:VTIMEZONE', 'TZID:America/Miquelon', /* … *
 | Clé `localStorage` | Contenu |
 |---|---|
 | `planning-ics:codes` | `{ J1: { include, title }, … }` : choix de l'étape 2 |
-| `planning-ics:opts` | `{ prefix, alarm, tz, merge }` : options de l'étape 3 |
+| `planning-ics:opts` | `{ prefix, alarm, merge }` : options de l'étape 3 |
 
 Les données ne sont mémorisées que sur l'appareil, et l'accès est protégé par `try/catch` (la navigation privée peut le bloquer). **Le planning lui-même n'est jamais stocké.** Pour réinitialiser :
 
@@ -364,16 +354,20 @@ Object.keys(localStorage).filter(k => k.startsWith('planning-ics:')).forEach(k =
 
 ### 6.5 Apparence
 
-Les couleurs sont des variables CSS dans `:root` :
+La charte graphique reprend la palette du **CHPF** (Centre Hospitalier de la Polynésie française). Les couleurs sont des variables CSS dans `:root` : d'abord les couleurs de la palette (`--chpf-*`), puis les rôles utilisés par la page :
 
 ```css
 :root {
-  --accent: #1f3b4d;   /* bandeau, boutons */
-  --accent2: #e07a3f;  /* pastilles d'étapes */
-  --bg: #f6f4ef;       /* fond */
+  --chpf-ardoise: #3e444a; --chpf-vert: #00ae5a; --chpf-bleu: #22bffd; --chpf-orange: #ffa837; --chpf-corail: #ff5151;
   /* … */
+  --accent: var(--chpf-ardoise);   /* bandeau, titres, boutons */
+  --accent2: var(--chpf-vert);     /* éléments décoratifs */
+  --bg: var(--chpf-gris-50);       /* fond */
+  --ok: #00753d; --warn: #8f5600; --err: #c62828;  /* variantes foncées pour le texte */
 }
 ```
+
+Les couleurs vives du logo (vert, bleu, orange, corail) n'atteignent pas un contraste suffisant pour du texte (AA, 4,5:1). Elles sont donc réservées aux aplats et aux décors (liseré quadricolore sous le bandeau, bordures). Pour le texte coloré, la page utilise des variantes foncées de ces teintes.
 
 ---
 
@@ -462,7 +456,7 @@ const { parseWorkbook, buildEvents, toICS, summarize } = mod.exports;
 const wb = XLSX.read(fs.readFileSync(process.argv[2]), { type: 'buffer' });
 const p = parseWorkbook(XLSX, wb);
 const codes = Object.fromEntries(Object.values(p.used).map(u => [u.code, { include: u.defaultInclude, title: u.defaultTitle }]));
-const cfg = { codes, from: p.first, to: p.last, merge: true, tz: 'Europe/Paris', uidKey: 'test' };
+const cfg = { codes, from: p.first, to: p.last, merge: true, uidKey: 'test' };
 
 // 3. Contrôles
 assert.strictEqual(p.warnings.length, 0, 'Jours de semaine incohérents : ' + p.warnings.join(', '));
@@ -573,7 +567,7 @@ L.push(`SUMMARY:${esc(e.title)}`, `LOCATION:${esc('CHU – Néonatologie')}`, �
 | Jours décalés d'un jour | Fichier issu d'un autre format de date | Regarder les avertissements « jour de semaine incohérent » affichés à l'étape 1 |
 | Heures ≠ logiciel RH | Durée absente de `Planning durées`, ou nouveau code | Vérifier l'onglet durées, comparer jour par jour dans l'aperçu |
 | Doublons dans l'agenda | Fichier importé deux fois | Importer par périodes disjointes (« Du / Au »), ou supprimer l'agenda dédié et réimporter |
-| Horaires décalés de plusieurs heures | Mauvais fuseau | Option « Fuseau horaire » et fuseau de l'agenda |
+| Horaires décalés de plusieurs heures | Fuseau de l'agenda différent | Le fichier est à l'heure de Tahiti (UTC−10) : vérifier le fuseau de l'agenda |
 | « Partager… » absent | Ordinateur, ou navigateur sans partage de fichiers | Normal : utiliser « Télécharger » |
 | Lien de signalement inactif | Page ouverte hors GitHub Pages | Renseigner `GITHUB_REPO` ([§6.1](#61-dépôt-github-des-signalements)) |
 
@@ -599,7 +593,7 @@ L.push(`SUMMARY:${esc(e.title)}`, `LOCATION:${esc('CHU – Néonatologie')}`, �
 - **Import ≠ synchronisation** : un `.ics` importé est une copie. Les changements ultérieurs du planning doivent être réimportés (par période) ou corrigés à la main dans l'agenda.
 - **Google Agenda mobile** ne sait pas importer de fichier : l'import se fait sur ordinateur.
 - **Congés comptés en jours calendaires** (week-ends inclus) dans la vérification, ce qui peut différer d'un décompte en jours ouvrés.
-- **Fuseaux** : seule la liste proposée est disponible (voir [§6.2](#62-fuseaux-horaires) pour en ajouter).
+- **Fuseau** : imposé à `Pacific/Tahiti` (voir [§6.2](#62-fuseau-horaire) pour le modifier).
 - **Un agent par fichier** : l'export doit concerner une seule personne.
 - **Signalement** : nécessite un compte GitHub.
 
