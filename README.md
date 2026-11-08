@@ -6,8 +6,6 @@ Convertit l'export Excel (`.xlsx`) d'un planning annuel issu du logiciel RH en f
 - **Aucune donnée envoyée sur internet** : le fichier Excel est lu et converti entièrement dans le navigateur.
 - **Contrôle avant export** : heures recalculées et comparées aux totaux du logiciel RH, congés listés, confirmation obligatoire.
 
-> 🔗 Application en ligne : `https://<votre-nom>.github.io/<dépôt>/`
-
 ---
 
 ## Sommaire
